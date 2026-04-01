@@ -37,10 +37,16 @@
           </div>
 
           <div class="upload-box field">
-            <label for="logoFile">Logo para el PDF</label>
-            <input type="file" id="logoFile" accept=".png,.jpg,.jpeg,.svg,.webp" />
-            <div class="hint">
-              Si no seleccionas un logo, el PDF se generará sin logo.
+            <label class="toggle-row">
+              <input type="checkbox" id="usarLogoCheck" />
+              <span>CAMBIAR LOGO</span>
+            </label>
+
+            <div id="logoWrapper" class="hidden mt-12">
+              <input type="file" id="logoFile" accept=".png,.jpg,.jpeg,.svg,.webp" />
+              <div class="hint">
+                Si no seleccionas un logo, se usará el logo por defecto.
+              </div>
             </div>
           </div>
 

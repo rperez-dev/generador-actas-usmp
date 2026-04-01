@@ -33,6 +33,8 @@ const el = {
   statCurso: document.getElementById("statCurso"),
   statIndicador: document.getElementById("statIndicador"),
   statAlumnos: document.getElementById("statAlumnos"),
+  usarLogoCheck: document.getElementById("usarLogoCheck"),
+  logoWrapper: document.getElementById("logoWrapper"),
 };
 
 function delay(ms) {
@@ -57,6 +59,21 @@ function uniqueSorted(values) {
       ),
     ),
   ].sort((a, b) => String(a).localeCompare(String(b), "es"));
+}
+
+function toggleLogo() {
+  const activo = el.usarLogoCheck.checked;
+
+  el.logoWrapper.classList.toggle("hidden", !activo);
+
+  if (!activo) {
+    // Si desactiva, limpiar logo cargado
+    el.logoFile.value = "";
+    state.logoBase64 = null;
+  } else {
+    // Si activa, cargar logo default automáticamente
+    cargarLogoDefault();
+  }
 }
 
 function getSelectedValues(select) {
@@ -608,8 +625,8 @@ async function limpiarTodo(limpiarArchivo = true, limpiarMensaje = true) {
 
   renderPreview([]);
   if (limpiarMensaje) {
-  clearMessage();
-}
+    clearMessage();
+  }
   updateUIState();
 }
 
@@ -677,6 +694,7 @@ function initEvents() {
   el.fechaInput.addEventListener("input", onFechaInput);
   el.generarBtn.addEventListener("click", generarPDF);
   el.limpiarBtn.addEventListener("click", () => limpiarTodo(true));
+  el.usarLogoCheck.addEventListener("change", toggleLogo);
 }
 
 async function init() {
@@ -685,6 +703,8 @@ async function init() {
   toggleModoManual();
   updateUIState();
   await cargarLogoDefault();
+  el.usarLogoCheck.checked = false;
+  toggleLogo();
 }
 
 document.addEventListener("DOMContentLoaded", init);
