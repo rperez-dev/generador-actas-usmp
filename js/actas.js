@@ -581,7 +581,7 @@ function generarPDF() {
   }
 }
 
-async function limpiarTodo(limpiarArchivo = true) {
+async function limpiarTodo(limpiarArchivo = true, limpiarMensaje = true) {
   if (limpiarArchivo) {
     el.excelFile.value = "";
     state.rawData = [];
@@ -607,7 +607,9 @@ async function limpiarTodo(limpiarArchivo = true) {
   setSingleSelectOptions(el.periodoInput, PERIODO_OPTIONS, DEFAULT_PERIODO);
 
   renderPreview([]);
+  if (limpiarMensaje) {
   clearMessage();
+}
   updateUIState();
 }
 
@@ -639,7 +641,7 @@ async function onExcelChange(event) {
     state.rawData = data;
     const cursos = uniqueSorted(data.map((row) => row["Descrip. Curso"]));
 
-    limpiarTodo(false);
+    await limpiarTodo(false, false);
     state.rawData = data;
 
     setOptions(el.cursoSelect, cursos, "Seleccione un curso");
