@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acta USMP</title>
+
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <div class="hero__badge">USMP - Registros Académicos</div>
+      <h1 class="hero__title">Generador de Acta de Notas</h1>
+      <p class="hero__subtitle">
+        Carga tu Excel, filtra la información y genera el acta.
+      </p>
+    </section> 
+
+    <section class="card">
+      <div class="card__header">
+        <h2>Configuración</h2>
+        <div id="messageBox" class="message"></div>
+      </div>
+      <div class="config-grid">
+        <div class="column">
+          <div class="upload-box field">
+            <label for="excelFile">Archivo Excel</label>
+            <input type="file" id="excelFile" accept=".xlsx,.xls" />
+            <div id="excelLoader" class="loader hidden mt-12">
+              Procesando archivo...
+            </div>
+          </div>
+
+          <div class="upload-box field">
+            <label for="logoFile">Logo para el PDF</label>
+            <input type="file" id="logoFile" accept=".png,.jpg,.jpeg,.svg,.webp" />
+            <div class="hint">
+              Si no seleccionas un logo, el PDF se generará sin logo.
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="cursoSelect">Curso</label>
+            <select id="cursoSelect">
+              <option value="">Seleccione un curso</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="carreraSelect">Carreras</label>
+            <select id="carreraSelect" multiple></select>
+            
+          </div>
+
+          <div class="field">
+            <label for="seccionSelect">Secciones</label>
+            <select id="seccionSelect" multiple></select>
+            
+          </div>
+        </div>
+
+        <div class="column">
+          <div class="field">
+            <label>Alumnos</label>
+
+            <label class="toggle-row">
+              <input type="checkbox" id="modoManualCheck" />
+              <span>Ingresar listado manual de alumnos</span>
+            </label>
+
+            <div id="alumnosSelectWrapper" class="mt-12">
+              <select id="alumnosSelect" multiple></select>
+              <div class="hint">
+                Si no seleccionas alumnos, se incluirán todos los del filtro aplicado.
+              </div>
+            </div>
+
+            <div id="alumnosManualWrapper" class="manual-box hidden mt-12">
+              <textarea
+                id="alumnosManualInput"
+                rows="10"
+                placeholder="Pega un alumno por línea&#10;&#10;Ejemplo:&#10;DÍAZ QUISPE ABI JHUNIOR&#10;ALCALDE HERNANDEZ DIEGO JESUS"
+              ></textarea>
+              <div class="hint">
+                Se ignorarán tildes, mayúsculas/minúsculas y espacios al inicio o final.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid form-grid--full mt-20">
+        <div class="field">
+          <label for="indicadorInput">Indicador</label>
+          <input id="indicadorInput" type="text" placeholder="Indicador" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label for="modalidadInput">Modalidad</label>
+          <select id="modalidadInput"></select>
+        </div>
+
+        <div class="field">
+          <label for="fechaInput">Fecha</label>
+          <input
+            id="fechaInput"
+            type="text"
+            inputmode="numeric"
+            maxlength="10"
+            placeholder="DD/MM/AAAA"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="field">
+          <label for="periodoInput">Periodo</label>
+          <select id="periodoInput"></select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn--primary" id="generarBtn" type="button">Generar PDF</button>
+        <button class="btn btn--secondary" id="limpiarBtn" type="button">Limpiar filtros</button>
+      </div>
+
+      
+    </section>
+
+    <section class="card mt-24">
+      <div class="card__header">
+        <h2>Vista previa</h2>
+        <p>Resumen del filtro actual y listado de alumnos seleccionados.</p>
+      </div>
+
+      <div class="stats stats--preview">
+        <div class="stat">
+          <span>Curso</span>
+          <strong id="statCurso">-</strong>
+        </div>
+        <div class="stat">
+          <span>Indicador</span>
+          <strong id="statIndicador">-</strong>
+        </div>
+        <div class="stat">
+          <span>Total de alumnos</span>
+          <strong id="statAlumnos">0</strong>
+        </div>
+      </div>
+
+      <div class="preview-box">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Escuela</th>
+                <th>Código SAP</th>
+                <th>Apellidos y Nombres</th>
+                <th>Seccion</th>
+              </tr>
+            </thead>
+            <tbody id="previewBody">
+              <tr>
+                <td colspan="5" class="empty-row">Carga un archivo Excel para comenzar.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/actas.js"></script>
+  <script src="js/pdf-generator.js"></script>
+</body>
+</html>
