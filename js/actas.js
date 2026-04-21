@@ -574,13 +574,19 @@ function generarPDF() {
     return;
   }
 
+  const seccionesSeleccionadas = getSelectedValues(el.seccionSelect);
+
+  const primeraSeccion = seccionesSeleccionadas.length
+    ? [seccionesSeleccionadas[0]]
+    : [];
+
   const config = {
     logoBase64: state.logoBase64,
     logoFormat: state.logoFormat,
     seleccion: state.filteredData,
     curso: el.cursoSelect.value || "",
     planes: getSelectedValues(el.carreraSelect),
-    secciones: getSelectedValues(el.seccionSelect),
+    secciones: primeraSeccion,
     ciclo: getCiclo(state.filteredData[0]["Curso"]),
     indicador: el.indicadorInput.value || "",
     modalidad: el.modalidadInput.value || "",

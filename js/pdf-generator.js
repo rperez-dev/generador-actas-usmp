@@ -90,7 +90,7 @@ window.PDFGenerator = (() => {
       normalizarLista(planes) || String(first["Denom. Plan"] || "").trim();
     const seccionesTexto =
       normalizarLista(secciones) || String(first["Nom Sección"] || "").trim();
-    const clave = first["Id sección"] ?? "";
+    const clave = first["Curso"] ?? "";
 
     drawLogo(doc, logoBase64, logoFormat);
 
@@ -155,7 +155,7 @@ window.PDFGenerator = (() => {
     );
     drawAlignedPair(
       doc,
-      "CLAVE:",
+      "COD. CURSO:",
       clave,
       rightLabelRightX,
       rightValueLeftX,
@@ -164,7 +164,7 @@ window.PDFGenerator = (() => {
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
-    doc.text("CARRERA:", rightLabelRightX, startY + lineGap * 2, {
+    doc.text("PROGRAMA:", rightLabelRightX, startY + lineGap * 2, {
       align: "right",
     });
 
@@ -197,7 +197,7 @@ window.PDFGenerator = (() => {
 
     const x = 15;
     const width = 180;
-    const height = 36;
+    const height = 45;
     const half = x + width / 2;
 
     doc.setDrawColor(0, 0, 0);
@@ -222,8 +222,8 @@ window.PDFGenerator = (() => {
     );
     drawAlignedPair(
       doc,
-      "Clave:",
-      first["Id sección"] ?? "",
+      "Cod. Curso:",
+      first["Curso"] ?? "",
       leftLabelRightX,
       leftValueLeftX,
       y + 15,
@@ -242,11 +242,21 @@ window.PDFGenerator = (() => {
     );
     drawAlignedPair(
       doc,
+      "Matriculados:",
+      String(seleccion.length),
+      leftLabelRightX,
+      leftValueLeftX,
+      y + 29,
+      9,
+      8,
+    );
+    drawAlignedPair(
+      doc,
       "Sección:",
       seccionTexto,
       leftLabelRightX,
       leftValueLeftX,
-      y + 29,
+      y + 36,
       9,
       8,
     );
@@ -254,46 +264,81 @@ window.PDFGenerator = (() => {
     const rightFooterLabelRightX = half + 25;
     const rightFooterValueLeftX = half + 27;
 
+    const normalGap = 7;
+    const largeGap = 10;
+
+    let currentY = y + 8;
+
     drawAlignedPair(
       doc,
       "Presentes:",
-      "__________",
+      "",
       rightFooterLabelRightX,
       rightFooterValueLeftX,
-      y + 8,
+      currentY,
       9,
       8,
     );
+
+    doc.line(
+      rightFooterValueLeftX,
+      currentY + 2,
+      rightFooterValueLeftX + 40,
+      currentY + 2,
+    );
+
+    currentY += normalGap;
+
     drawAlignedPair(
       doc,
       "Ausentes:",
-      "__________",
+      "",
       rightFooterLabelRightX,
       rightFooterValueLeftX,
-      y + 15,
+      currentY,
       9,
       8,
     );
-    drawAlignedPair(
-      doc,
-      "Matriculados:",
-      String(seleccion.length),
-      rightFooterLabelRightX,
+
+    doc.line(
       rightFooterValueLeftX,
-      y + 22,
-      9,
-      8,
+      currentY + 2,
+      rightFooterValueLeftX + 40,
+      currentY + 2,
     );
+
+    currentY += largeGap;
+
     drawAlignedPair(
       doc,
       "Docente:",
-      "__________________",
+      "",
       rightFooterLabelRightX,
       rightFooterValueLeftX,
-      y + 29,
+      currentY,
       9,
       8,
     );
+
+    doc.line(
+      rightFooterValueLeftX,
+      currentY + 2,
+      rightFooterValueLeftX + 60,
+      currentY + 2,
+    );
+
+    currentY += largeGap;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("Firma:", rightFooterLabelRightX, currentY, {
+      align: "right",
+    });
+
+    const firmaStart = rightFooterValueLeftX;
+    const firmaEnd = rightFooterValueLeftX + 60;
+
+    doc.line(firmaStart, currentY + 2, firmaEnd, currentY + 2);
   }
 
   function buildRows(seleccion, abreviarCarrera) {
