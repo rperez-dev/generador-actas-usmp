@@ -130,6 +130,17 @@
         
       </div>
 
+      <div class="row-inline">
+      <div class="field">
+        <label for="aulaInput">Aula (opcional)</label>
+        <input
+          id="aulaInput"
+          type="text"
+          placeholder="Ej: A-101"
+          autocomplete="off"
+        />
+      </div>
+
       <div class="field">
         <label for="watermarkType">Seleccionar marca de agua:</label>
         <select id="watermarkType">
@@ -137,13 +148,13 @@
           <option value="BORRADOR">BORRADOR</option>
           <option value="DUPLICADO">DUPLICADO</option>
         </select>
-        
       </div>
+    </div>
 
       <div class="actions">
         <button class="btn btn--primary" id="generarBtn" type="button">Generar PDF</button>
         <button class="btn btn--secondary" id="limpiarBtn" type="button">Limpiar filtros</button>
-        <button class="btn btn--secondary" id="generarRotuladoPDF" type="button"> Generar Rotulado</button>
+        <button class="btn btn--secondary btn--gray" id="generarRotuladoPDF" type="button"> Generar Rotulado</button>
       </div>
 
       

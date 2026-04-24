@@ -37,6 +37,7 @@ const el = {
   logoWrapper: document.getElementById("logoWrapper"),
   watermarkType: document.getElementById("watermarkType"),
   rotuladoBtn: document.getElementById("generarRotuladoPDF"),
+  aulaInput: document.getElementById("aulaInput"),
 };
 
 function delay(ms) {
@@ -634,6 +635,7 @@ function generarPDF() {
     periodo: el.periodoInput.value || DEFAULT_PERIODO,
     abreviarCarrera,
     watermark: el.watermarkType.value,
+    aula: el.aulaInput.value || "",
   };
 
   try {
@@ -695,6 +697,7 @@ async function limpiarTodo(limpiarArchivo = true, limpiarMensaje = true) {
   el.indicadorInput.value = "";
   el.fechaInput.value = getFechaActualFormateada();
   state.filteredData = [];
+  el.aulaInput.value = "";
 
   setSingleSelectOptions(el.modalidadInput, MODALIDAD_OPTIONS, "");
   setSingleSelectOptions(el.periodoInput, PERIODO_OPTIONS, DEFAULT_PERIODO);

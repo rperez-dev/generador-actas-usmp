@@ -222,7 +222,37 @@ window.PDFGenerator = (() => {
     });
 
     const seccionY = startY + lineGap * 3;
-    drawWidePair(doc, "SECCION:", seccionesTexto, 45, 48, seccionY, 140, 9, 8);
+
+    const seccionLabelRightX = 45;
+    const seccionValueLeftX = 48;
+
+    const aulaLabelRightX = rightLabelRightX;
+    const aulaValueLeftX = rightValueLeftX;
+
+    const seccionMaxWidth = aulaLabelRightX - seccionValueLeftX - 6;
+
+    drawWidePair(
+      doc,
+      "SECCION:",
+      seccionesTexto,
+      seccionLabelRightX,
+      seccionValueLeftX,
+      seccionY,
+      seccionMaxWidth,
+      9,
+      8,
+    );
+
+    if (config.aula) {
+      drawAlignedPair(
+        doc,
+        "AULA:",
+        config.aula,
+        aulaLabelRightX,
+        aulaValueLeftX,
+        seccionY,
+      );
+    }
 
     return seccionY + 10;
   }
