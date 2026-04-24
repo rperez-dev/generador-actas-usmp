@@ -41,6 +41,44 @@ window.PDFGenerator = (() => {
     });
   }
 
+  function drawWatermark(doc, text = "BORRADOR") {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    doc.saveGraphicsState();
+
+    if (doc.setGState) {
+      doc.setGState(new doc.GState({ opacity: 0.15 }));
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(90);
+    doc.setTextColor(80, 80, 80);
+
+    const angle = 30;
+
+    const centerX = pageWidth / 2;
+    const centerY = pageHeight / 2;
+
+    const textWidth = doc.getTextWidth(text);
+    const textHeight = doc.getTextDimensions(text).h;
+
+    const rad = (angle * Math.PI) / 140;
+
+    const offsetX = (textHeight / 2) * Math.sin(rad);
+    const offsetY = (textWidth / 2) * Math.sin(rad);
+
+    const moveRight = 25;
+
+    doc.text(text, centerX - offsetX + moveRight, centerY + offsetY, {
+      align: "center",
+      angle: angle,
+      baseline: "middle",
+    });
+
+    doc.restoreGraphicsState();
+  }
+
   function drawLogo(doc, logoBase64, logoFormat) {
     if (!logoBase64) return;
 
@@ -409,17 +447,23 @@ window.PDFGenerator = (() => {
         lineWidth: 0.18,
       },
       columnStyles: {
-        0: { cellWidth: 10 },
+        0: { cellWidth: 8 },
         1: { cellWidth: 20 },
         2: { cellWidth: 26 },
         3: { cellWidth: 68, halign: "center" },
-        4: { cellWidth: 28, halign: "center", overflow: "visible" },
-        5: { cellWidth: 14 },
-        6: { cellWidth: 14 },
+        4: { cellWidth: 24, halign: "center", overflow: "visible" },
+        5: { cellWidth: 12 },
+        6: { cellWidth: 22 },
       },
       didParseCell: function (data) {
         if (data.section === "body" && data.column.index === 4) {
           data.cell.styles.fontSize = 7.2;
+        }
+      },
+
+      didDrawPage: function () {
+        if (config.watermark) {
+          drawWatermark(doc, config.watermark);
         }
       },
     });
@@ -433,6 +477,10 @@ window.PDFGenerator = (() => {
     if (finalY + footerHeight > pageHeight - bottomMargin) {
       doc.addPage();
       finalY = 20;
+
+      if (config.watermark) {
+        drawWatermark(doc, config.watermark);
+      }
     }
 
     drawFooterBox(doc, config, finalY);

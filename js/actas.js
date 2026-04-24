@@ -35,6 +35,7 @@ const el = {
   statAlumnos: document.getElementById("statAlumnos"),
   usarLogoCheck: document.getElementById("usarLogoCheck"),
   logoWrapper: document.getElementById("logoWrapper"),
+  watermarkType: document.getElementById("watermarkType"),
 };
 
 function delay(ms) {
@@ -67,11 +68,9 @@ function toggleLogo() {
   el.logoWrapper.classList.toggle("hidden", !activo);
 
   if (!activo) {
-    // Si desactiva, limpiar logo cargado
     el.logoFile.value = "";
     state.logoBase64 = null;
   } else {
-    // Si activa, cargar logo default automáticamente
     cargarLogoDefault();
   }
 }
@@ -181,6 +180,7 @@ function normalizarTexto(valor = "") {
   return String(valor)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u00A0/g, " ")
     .replace(/\s+/g, " ")
     .trim()
     .toUpperCase();
@@ -359,6 +359,32 @@ function toggleModoManual() {
   applyFilters();
 }
 
+function normalizarCursoClave(valor = "") {
+  return String(valor)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u00A0/g, " ")
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
+}
+
+function generarMapaCursosSeguro(data) {
+  const mapa = new Map();
+
+  data.forEach((row) => {
+    const original = row["Descrip. Curso"];
+    const clave = normalizarCursoClave(original);
+
+    if (!mapa.has(clave)) {
+      mapa.set(clave, original);
+    }
+  });
+
+  return mapa;
+}
+
 function actualizarCarreras() {
   const curso = el.cursoSelect.value;
 
@@ -442,6 +468,7 @@ function actualizarAlumnos() {
   );
 
   const alumnos = uniqueSorted(data.map((row) => row["Nombre resumen"]));
+
   setOptionsPreserveSelection(
     el.alumnosSelect,
     alumnos,
@@ -450,6 +477,17 @@ function actualizarAlumnos() {
 
   updateUIState();
   applyFilters();
+}
+
+function normalizarCursoClave(valor = "") {
+  return String(valor)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u00A0/g, " ")
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
 }
 
 function applyFilters() {
@@ -481,9 +519,8 @@ function applyFilters() {
   if (usarModoManual) {
     if (listadoManual.length) {
       const listadoSet = new Set(listadoManual);
-      data = data.filter((row) =>
-        listadoSet.has(normalizarTexto(row["Nombre resumen"])),
-      );
+
+      data = data.filter((row) => listadoSet.has(row["alumno_normalizado"]));
     }
   } else if (alumnos.length) {
     data = data.filter((row) => alumnos.includes(row["Nombre resumen"]));
@@ -593,6 +630,7 @@ function generarPDF() {
     fecha: el.fechaInput.value || "",
     periodo: el.periodoInput.value || DEFAULT_PERIODO,
     abreviarCarrera,
+    watermark: el.watermarkType.value,
   };
 
   try {
@@ -661,14 +699,21 @@ async function onExcelChange(event) {
       return;
     }
 
+    data.forEach((row) => {
+      row["alumno_normalizado"] = normalizarTexto(row["Nombre resumen"]);
+    });
+
     state.rawData = data;
+
     const cursos = uniqueSorted(data.map((row) => row["Descrip. Curso"]));
 
     await limpiarTodo(false, false);
     state.rawData = data;
 
     setOptions(el.cursoSelect, cursos, "Seleccione un curso");
+
     updateUIState();
+
     showMessage(
       `Archivo cargado correctamente. Registros detectados: ${data.length}.`,
       "success",
