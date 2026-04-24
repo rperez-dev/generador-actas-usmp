@@ -36,6 +36,7 @@ const el = {
   usarLogoCheck: document.getElementById("usarLogoCheck"),
   logoWrapper: document.getElementById("logoWrapper"),
   watermarkType: document.getElementById("watermarkType"),
+  rotuladoBtn: document.getElementById("generarRotuladoPDF"),
 };
 
 function delay(ms) {
@@ -138,6 +139,8 @@ function setSingleSelectOptions(
     select.appendChild(option);
   });
 }
+
+
 
 function abreviarCarrera(nombre = "") {
   return String(nombre)
@@ -642,6 +645,35 @@ function generarPDF() {
   }
 }
 
+function generarRotuladoPDF() {
+  clearMessage();
+
+  if (!state.filteredData.length) {
+    showMessage("No hay datos para generar el rotulado.", "error");
+    return;
+  }
+
+  if (!window.PDFGeneratorRotulado) {
+    showMessage("No existe PDFGeneratorRotulado.", "error");
+    return;
+  }
+
+  const config = {
+    curso: el.cursoSelect.value || "",
+    indicador: el.indicadorInput.value || "",
+    fecha: el.fechaInput.value || "",
+    total: state.filteredData.length,
+  };
+
+  try {
+    window.PDFGeneratorRotulado.generate(config);
+    showMessage("Rotulado generado correctamente.", "success");
+  } catch (err) {
+    console.error(err);
+    showMessage("Error al generar rotulado.", "error");
+  }
+}
+
 async function limpiarTodo(limpiarArchivo = true, limpiarMensaje = true) {
   if (limpiarArchivo) {
     el.excelFile.value = "";
@@ -744,6 +776,7 @@ function initEvents() {
   el.indicadorInput.addEventListener("input", onIndicadorInput);
   el.fechaInput.addEventListener("input", onFechaInput);
   el.generarBtn.addEventListener("click", generarPDF);
+  el.rotuladoBtn.addEventListener("click", generarRotuladoPDF);
   el.limpiarBtn.addEventListener("click", () => limpiarTodo(true));
   el.usarLogoCheck.addEventListener("change", toggleLogo);
 }
