@@ -409,16 +409,24 @@ window.PDFGenerator = (() => {
     doc.line(firmaStart, currentY + 2, firmaEnd, currentY + 2);
   }
 
-  function buildRows(seleccion, abreviarCarrera) {
-    return seleccion.map((row, idx) => [
-      idx + 1,
-      abreviarCarrera(row["Denom. Plan"]),
-      row["Número Matrícula"] ?? "",
-      row["Nombre resumen"] ?? "",
-      row["Nom Sección"] ?? "",
-      "",
-      "",
-    ]);
+  function buildRows(seleccion, abreviarCarrera, esMedicinaPresencial = false) {
+    return seleccion.map((row, idx) => {
+      const fila = [
+        idx + 1,
+        abreviarCarrera(row["Denom. Plan"]),
+        row["Número Matrícula"] ?? "",
+        row["Nombre resumen"] ?? "",
+        row["Nom Sección"] ?? "",
+        "",
+        "",
+      ];
+
+      if (esMedicinaPresencial) {
+        fila.push("");
+      }
+
+      return fila;
+    });
   }
 
   function generate(config) {
@@ -430,21 +438,46 @@ window.PDFGenerator = (() => {
     });
 
     const startY = drawHeader(doc, config);
-    const bodyRows = buildRows(config.seleccion, config.abreviarCarrera);
+    const esMedicinaPresencial =
+      config.modalidad === "PRESENCIAL" &&
+      config.planes.some((plan) =>
+        String(plan).toUpperCase().includes("MEDICINA HUMANA"),
+      );
+
+    const headColumns = esMedicinaPresencial
+      ? [
+          [
+            "N°",
+            "Escuela",
+            "Código SAP",
+            "Apellidos y Nombres",
+            "Seccion",
+            "Nota",
+            "Firma",
+            "Fila",
+          ],
+        ]
+      : [
+          [
+            "N°",
+            "Escuela",
+            "Código SAP",
+            "Apellidos y Nombres",
+            "Seccion",
+            "Nota",
+            "Firma",
+          ],
+        ];
+
+    const bodyRows = buildRows(
+      config.seleccion,
+      config.abreviarCarrera,
+      esMedicinaPresencial,
+    );
 
     doc.autoTable({
       startY,
-      head: [
-        [
-          "N°",
-          "Escuela",
-          "Código SAP",
-          "Apellidos y Nombres",
-          "Seccion",
-          "Nota",
-          "Firma",
-        ],
-      ],
+      head: headColumns,
       body: bodyRows,
       margin: {
         top: 10,
@@ -455,7 +488,7 @@ window.PDFGenerator = (() => {
       theme: "grid",
       styles: {
         font: "helvetica",
-        fontSize: 7.6,
+        fontSize: 7,
         cellPadding: { top: 1.6, right: 1.8, bottom: 1.6, left: 1.8 },
         textColor: [0, 0, 0],
         lineColor: [0, 0, 0],
@@ -476,15 +509,27 @@ window.PDFGenerator = (() => {
         lineColor: [0, 0, 0],
         lineWidth: 0.18,
       },
-      columnStyles: {
-        0: { cellWidth: 8 },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 26 },
-        3: { cellWidth: 68, halign: "center" },
-        4: { cellWidth: 24, halign: "center", overflow: "visible" },
-        5: { cellWidth: 12 },
-        6: { cellWidth: 22 },
-      },
+      columnStyles: esMedicinaPresencial
+        ? {
+            0: { cellWidth: 8 },
+            1: { cellWidth: 18 },
+            2: { cellWidth: 24 },
+            3: { cellWidth: 62, halign: "center" },
+            4: { cellWidth: 22, halign: "center", overflow: "visible" },
+            5: { cellWidth: 12 },
+            6: { cellWidth: 22 },
+            7: { cellWidth: 12 },
+          }
+        : {
+            0: { cellWidth: 8 },
+            1: { cellWidth: 18 },
+            2: { cellWidth: 26 },
+            3: { cellWidth: 68, halign: "center" },
+            4: { cellWidth: 24, halign: "center", overflow: "visible" },
+            5: { cellWidth: 12 },
+            6: { cellWidth: 22 },
+          },
+
       didParseCell: function (data) {
         if (data.section === "body" && data.column.index === 4) {
           data.cell.styles.fontSize = 7.2;
