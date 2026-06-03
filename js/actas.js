@@ -676,19 +676,26 @@ function generarPDF() {
   try {
     window.PDFGenerator.generate({
       ...config,
+      seleccion: state.filteredData,
+      watermark: el.watermarkType.value || "",
+      esActaInhabilitados: false,
       nombreArchivo: `ACTA_${config.curso}_${config.fecha}.pdf`,
     });
-    if (el.inhabilitadosCheck.checked && state.inhabilitadosData.length) {
+
+    if (
+      el.inhabilitadosCheck.checked &&
+      state.inhabilitadosData.length > 0 &&
+      config.watermark !== "BORRADOR"
+    ) {
       window.PDFGenerator.generate({
         ...config,
-
         seleccion: state.inhabilitadosData,
-
         watermark: "INHABILITADOS",
-
+        esActaInhabilitados: true,
         nombreArchivo: `ACTA_INHABILITADOS_${config.curso}_${config.fecha}.pdf`,
       });
     }
+
     showMessage("PDF generado correctamente.", "success");
   } catch (err) {
     console.error(err);
@@ -756,17 +763,9 @@ async function limpiarTodo(limpiarArchivo = true, limpiarMensaje = true) {
   state.filteredData = [];
   state.inhabilitadosData = [];
 
-  setSingleSelectOptions(
-    el.modalidadInput,
-    MODALIDAD_OPTIONS,
-    ""
-  );
+  setSingleSelectOptions(el.modalidadInput, MODALIDAD_OPTIONS, "");
 
-  setSingleSelectOptions(
-    el.periodoInput,
-    PERIODO_OPTIONS,
-    DEFAULT_PERIODO
-  );
+  setSingleSelectOptions(el.periodoInput, PERIODO_OPTIONS, DEFAULT_PERIODO);
 
   renderPreview([]);
 

@@ -42,48 +42,48 @@ window.PDFGenerator = (() => {
   }
 
   function drawWatermark(doc, text = "BORRADOR") {
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
-  doc.saveGraphicsState();
+    doc.saveGraphicsState();
 
-  if (doc.setGState) {
-    doc.setGState(new doc.GState({ opacity: 0.12 }));
+    if (doc.setGState) {
+      doc.setGState(new doc.GState({ opacity: 0.12 }));
+    }
+
+    doc.setFont("helvetica", "bold");
+
+    if (text === "INHABILITADOS") {
+      doc.setFontSize(70);
+      doc.setTextColor(180, 0, 0);
+    } else {
+      doc.setFontSize(90);
+      doc.setTextColor(80, 80, 80);
+    }
+
+    const angle = 30;
+
+    const centerX = pageWidth / 2;
+    const centerY = pageHeight / 2;
+
+    const textWidth = doc.getTextWidth(text);
+    const textHeight = doc.getTextDimensions(text).h;
+
+    const rad = (angle * Math.PI) / 180;
+
+    const offsetX = (textHeight / 2) * Math.sin(rad);
+    const offsetY = (textWidth / 2) * Math.sin(rad);
+
+    const moveRight = 25;
+
+    doc.text(text, centerX - offsetX + moveRight, centerY + offsetY, {
+      align: "center",
+      angle,
+      baseline: "middle",
+    });
+
+    doc.restoreGraphicsState();
   }
-
-  doc.setFont("helvetica", "bold");
-
-  if (text === "INHABILITADOS") {
-    doc.setFontSize(70);
-    doc.setTextColor(180, 0, 0);
-  } else {
-    doc.setFontSize(90);
-    doc.setTextColor(80, 80, 80);
-  }
-
-  const angle = 30;
-
-  const centerX = pageWidth / 2;
-  const centerY = pageHeight / 2;
-
-  const textWidth = doc.getTextWidth(text);
-  const textHeight = doc.getTextDimensions(text).h;
-
-  const rad = (angle * Math.PI) / 180;
-
-  const offsetX = (textHeight / 2) * Math.sin(rad);
-  const offsetY = (textWidth / 2) * Math.sin(rad);
-
-  const moveRight = 25;
-
-  doc.text(text, centerX - offsetX + moveRight, centerY + offsetY, {
-    align: "center",
-    angle,
-    baseline: "middle",
-  });
-
-  doc.restoreGraphicsState();
-}
 
   function drawLogo(doc, logoBase64, logoFormat) {
     if (!logoBase64) return;
@@ -140,20 +140,42 @@ window.PDFGenerator = (() => {
 
     doc.setTextColor(0, 0, 0);
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text("ACTAS DE NOTAS", 105, 28, { align: "center" });
+    const esActaInhabilitados = config.esActaInhabilitados === true;
 
-    doc.setFontSize(9.5);
-    doc.text(
-      `${curso || "ASIGNATURA"} - ${indicador || "INDICADOR"}`,
-      105,
-      33,
-      {
+    doc.setFont("helvetica", "bold");
+
+    if (esActaInhabilitados) {
+      doc.setFontSize(12);
+
+      doc.text("ACTA DE INHABILITADOS", 105, 24, {
+        align: "center",
+      });
+
+      doc.setFontSize(10);
+
+      doc.text(curso || "ASIGNATURA", 105, 31, {
         align: "center",
         maxWidth: 120,
-      },
-    );
+      });
+    } else {
+      doc.setFontSize(11);
+
+      doc.text("ACTAS DE NOTAS", 105, 24, {
+        align: "center",
+      });
+
+      doc.setFontSize(9.5);
+
+      doc.text(
+        `${curso || "ASIGNATURA"} - ${indicador || "INDICADOR"}`,
+        105,
+        31,
+        {
+          align: "center",
+          maxWidth: 120,
+        },
+      );
+    }
 
     const startY = 43;
     const lineGap = 7;
@@ -415,8 +437,24 @@ window.PDFGenerator = (() => {
     doc.line(firmaStart, currentY + 2, firmaEnd, currentY + 2);
   }
 
-  function buildRows(seleccion, abreviarCarrera, esMedicinaPresencial = false) {
+  function buildRows(
+    seleccion,
+    abreviarCarrera,
+    esMedicinaPresencial = false,
+    esActaInhabilitados = false,
+  ) {
     return seleccion.map((row, idx) => {
+      if (esActaInhabilitados) {
+        return [
+          idx + 1,
+          abreviarCarrera(row["Denom. Plan"]),
+          row["Número Matrícula"] ?? "",
+          row["Nombre resumen"] ?? "",
+          row["Nom Sección"] ?? "",
+          "INHABILITADO",
+        ];
+      }
+
       const fila = [
         idx + 1,
         abreviarCarrera(row["Denom. Plan"]),
@@ -437,6 +475,7 @@ window.PDFGenerator = (() => {
 
   function generate(config) {
     const { jsPDF } = window.jspdf;
+
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
@@ -444,58 +483,85 @@ window.PDFGenerator = (() => {
     });
 
     const startY = drawHeader(doc, config);
+
+    const esActaInhabilitados = config.esActaInhabilitados === true;
+
     const esMedicinaPresencial =
       config.modalidad === "PRESENCIAL" &&
       config.planes.some((plan) =>
         String(plan).toUpperCase().includes("MEDICINA HUMANA"),
       );
 
-    const headColumns = esMedicinaPresencial
-      ? [
-          [
-            "N°",
-            "Escuela",
-            "Código SAP",
-            "Apellidos y Nombres",
-            "Seccion",
-            "Nota",
-            "Firma",
-            "Fila",
-          ],
-        ]
-      : [
-          [
-            "N°",
-            "Escuela",
-            "Código SAP",
-            "Apellidos y Nombres",
-            "Seccion",
-            "Nota",
-            "Firma",
-          ],
-        ];
+    let headColumns;
+
+    if (esActaInhabilitados) {
+      headColumns = [
+        [
+          "N°",
+          "Escuela",
+          "Código SAP",
+          "Apellidos y Nombres",
+          "Seccion",
+          "Estado",
+        ],
+      ];
+    } else if (esMedicinaPresencial) {
+      headColumns = [
+        [
+          "N°",
+          "Escuela",
+          "Código SAP",
+          "Apellidos y Nombres",
+          "Seccion",
+          "Nota",
+          "Firma",
+          "Fila",
+        ],
+      ];
+    } else {
+      headColumns = [
+        [
+          "N°",
+          "Escuela",
+          "Código SAP",
+          "Apellidos y Nombres",
+          "Seccion",
+          "Nota",
+          "Firma",
+        ],
+      ];
+    }
 
     const bodyRows = buildRows(
       config.seleccion,
       config.abreviarCarrera,
       esMedicinaPresencial,
+      esActaInhabilitados,
     );
 
     doc.autoTable({
       startY,
       head: headColumns,
       body: bodyRows,
+
       margin: {
         top: 10,
         left: 15,
         right: 15,
         bottom: 20,
       },
+
       theme: "grid",
+
       styles: {
         font: "helvetica",
         fontSize: 7,
-        cellPadding: { top: 1.6, right: 1.8, bottom: 1.6, left: 1.8 },
+        cellPadding: {
+          top: 1.6,
+          right: 1.8,
+          bottom: 1.6,
+          left: 1.8,
+        },
         textColor: [0, 0, 0],
         lineColor: [0, 0, 0],
         lineWidth: 0.2,
@@ -503,6 +569,7 @@ window.PDFGenerator = (() => {
         valign: "middle",
         overflow: "linebreak",
       },
+
       headStyles: {
         fillColor: [120, 120, 120],
         textColor: [255, 255, 255],
@@ -511,34 +578,61 @@ window.PDFGenerator = (() => {
         lineColor: [0, 0, 0],
         lineWidth: 0.25,
       },
+
       bodyStyles: {
         lineColor: [0, 0, 0],
         lineWidth: 0.18,
       },
-      columnStyles: esMedicinaPresencial
+
+      columnStyles: esActaInhabilitados
         ? {
             0: { cellWidth: 8 },
-            1: { cellWidth: 18 },
-            2: { cellWidth: 24 },
-            3: { cellWidth: 62, halign: "center" },
-            4: { cellWidth: 22, halign: "center", overflow: "visible" },
-            5: { cellWidth: 12 },
-            6: { cellWidth: 22 },
-            7: { cellWidth: 12 },
-          }
-        : {
-            0: { cellWidth: 8 },
-            1: { cellWidth: 18 },
+            1: { cellWidth: 20 },
             2: { cellWidth: 26 },
-            3: { cellWidth: 68, halign: "center" },
-            4: { cellWidth: 24, halign: "center", overflow: "visible" },
-            5: { cellWidth: 12 },
-            6: { cellWidth: 22 },
-          },
+            3: { cellWidth: 78, halign: "center" },
+            4: { cellWidth: 24, halign: "center" },
+            5: { cellWidth: 24, halign: "center" },
+          }
+        : esMedicinaPresencial
+          ? {
+              0: { cellWidth: 8 },
+              1: { cellWidth: 18 },
+              2: { cellWidth: 24 },
+              3: { cellWidth: 62, halign: "center" },
+              4: {
+                cellWidth: 22,
+                halign: "center",
+                overflow: "visible",
+              },
+              5: { cellWidth: 12 },
+              6: { cellWidth: 22 },
+              7: { cellWidth: 12 },
+            }
+          : {
+              0: { cellWidth: 8 },
+              1: { cellWidth: 18 },
+              2: { cellWidth: 26 },
+              3: { cellWidth: 68, halign: "center" },
+              4: {
+                cellWidth: 24,
+                halign: "center",
+                overflow: "visible",
+              },
+              5: { cellWidth: 12 },
+              6: { cellWidth: 22 },
+            },
 
-      didParseCell: function (data) {
+      didParseCell(data) {
         if (data.section === "body" && data.column.index === 4) {
           data.cell.styles.fontSize = 7.2;
+        }
+
+        if (
+          esActaInhabilitados &&
+          data.section === "body" &&
+          data.column.index === 5
+        ) {
+          data.cell.styles.fontStyle = "bold";
         }
       },
 
@@ -550,14 +644,17 @@ window.PDFGenerator = (() => {
     });
 
     let finalY = doc.lastAutoTable.finalY + 10;
+
     const pageHeight = doc.internal.pageSize.getHeight();
     const footerHeight = 36;
     const bottomMargin = 20;
+
     const nombreArchivo =
       config.nombreArchivo || `ACTA_${config.curso}_${config.fecha}.pdf`;
 
     if (finalY + footerHeight > pageHeight - bottomMargin) {
       doc.addPage();
+
       finalY = 20;
 
       if (config.watermark) {
@@ -566,6 +663,7 @@ window.PDFGenerator = (() => {
     }
 
     drawFooterBox(doc, config, finalY);
+
     doc.save(nombreArchivo);
   }
 
