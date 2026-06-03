@@ -451,8 +451,9 @@ th {
 
 .row-inline {
   display: grid;
-  grid-template-columns: 1fr 1.5fr;
-  gap: 20px;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 18px;
+  align-items: end;
   margin-top: 4px;
 }
 
@@ -462,3 +463,28 @@ th {
   }
 }
 
+.field-watermark {
+  width: auto;
+  flex: initial;
+}
+
+.field-checkbox {
+  min-width: auto;
+  justify-content: flex-end;
+}
+
+.field-checkbox .toggle-row {
+  margin-top: 0;
+  height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.field-checkbox {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-checkbox > label:first-child {
+  height: 22px;
+}

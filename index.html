@@ -131,25 +131,62 @@
       </div>
 
       <div class="row-inline">
-      <div class="field">
-        <label for="aulaInput">Aula (opcional)</label>
-        <input
-          id="aulaInput"
-          type="text"
-          placeholder="Ej: A-101"
-          autocomplete="off"
-        />
-      </div>
+  <div class="field">
+    <label for="aulaInput">Aula (opcional)</label>
+    <input
+      id="aulaInput"
+      type="text"
+      placeholder="Ej: A-101"
+      autocomplete="off"
+    />
+  </div>
 
-      <div class="field">
-        <label for="watermarkType">Seleccionar marca de agua:</label>
-        <select id="watermarkType">
-          <option value="">Sin marca</option>
-          <option value="BORRADOR">BORRADOR</option>
-          <option value="DUPLICADO">DUPLICADO</option>
-        </select>
-      </div>
-    </div>
+  <div class="field field-watermark">
+    <label for="watermarkType">
+      Marca de agua
+    </label>
+
+    <select id="watermarkType">
+      <option value="">Sin marca</option>
+      <option value="BORRADOR">BORRADOR</option>
+      <option value="DUPLICADO">DUPLICADO</option>
+    </select>
+  </div>
+
+ <div class="field field-checkbox">
+  <label for="inhabilitadosCheck">
+    Inhabilitados
+  </label>
+
+  <label class="toggle-row">
+    <input
+      type="checkbox"
+      id="inhabilitadosCheck"
+    />
+    <span>Habilitar</span>
+  </label>
+</div>
+</div>
+
+<div
+  id="inhabilitadosWrapper"
+  class="field hidden mt-12"
+>
+  <label>
+    Alumnos Inhabilitados
+  </label>
+
+  <textarea
+    id="inhabilitadosInput"
+    rows="8"
+    placeholder="Ingresar alumnos inhabilitados"
+  ></textarea>
+
+  <div class="hint">
+    Estos alumnos serán excluidos
+    del acta principal.
+  </div>
+</div>
 
       <div class="actions">
         <button class="btn btn--primary" id="generarBtn" type="button">Generar PDF</button>

@@ -1,6 +1,7 @@
 const state = {
   rawData: [],
   filteredData: [],
+  inhabilitadosData: [],
   logoBase64: null,
   logoFormat: "PNG",
 };
@@ -38,6 +39,9 @@ const el = {
   watermarkType: document.getElementById("watermarkType"),
   rotuladoBtn: document.getElementById("generarRotuladoPDF"),
   aulaInput: document.getElementById("aulaInput"),
+  inhabilitadosCheck: document.getElementById("inhabilitadosCheck"),
+  inhabilitadosWrapper: document.getElementById("inhabilitadosWrapper"),
+  inhabilitadosInput: document.getElementById("inhabilitadosInput"),
 };
 
 function delay(ms) {
@@ -140,9 +144,6 @@ function setSingleSelectOptions(
     select.appendChild(option);
   });
 }
-  
-
-
 
 function abreviarCarrera(nombre = "") {
   return String(nombre)
@@ -181,6 +182,14 @@ function validateColumns(data) {
     : null;
 }
 
+function toggleInhabilitados() {
+  const activo = el.inhabilitadosCheck.checked;
+
+  el.inhabilitadosWrapper.classList.toggle("hidden", !activo);
+
+  applyFilters();
+}
+
 function normalizarTexto(valor = "") {
   return String(valor)
     .normalize("NFD")
@@ -193,6 +202,13 @@ function normalizarTexto(valor = "") {
 
 function obtenerListadoManual() {
   return el.alumnosManualInput.value
+    .split(/\r?\n/)
+    .map((item) => normalizarTexto(item))
+    .filter(Boolean);
+}
+
+function obtenerInhabilitados() {
+  return el.inhabilitadosInput.value
     .split(/\r?\n/)
     .map((item) => normalizarTexto(item))
     .filter(Boolean);
@@ -531,6 +547,24 @@ function applyFilters() {
     data = data.filter((row) => alumnos.includes(row["Nombre resumen"]));
   }
 
+  state.inhabilitadosData = [];
+
+  if (el.inhabilitadosCheck.checked) {
+    const inhabilitados = obtenerInhabilitados();
+
+    if (inhabilitados.length) {
+      const setInhabilitados = new Set(inhabilitados);
+
+      state.inhabilitadosData = data.filter((row) =>
+        setInhabilitados.has(row["alumno_normalizado"]),
+      );
+
+      data = data.filter(
+        (row) => !setInhabilitados.has(row["alumno_normalizado"]),
+      );
+    }
+  }
+
   data.sort((a, b) =>
     String(a["Nombre resumen"]).localeCompare(
       String(b["Nombre resumen"]),
@@ -640,7 +674,21 @@ function generarPDF() {
   };
 
   try {
-    window.PDFGenerator.generate(config);
+    window.PDFGenerator.generate({
+      ...config,
+      nombreArchivo: `ACTA_${config.curso}_${config.fecha}.pdf`,
+    });
+    if (el.inhabilitadosCheck.checked && state.inhabilitadosData.length) {
+      window.PDFGenerator.generate({
+        ...config,
+
+        seleccion: state.inhabilitadosData,
+
+        watermark: "INHABILITADOS",
+
+        nombreArchivo: `ACTA_INHABILITADOS_${config.curso}_${config.fecha}.pdf`,
+      });
+    }
     showMessage("PDF generado correctamente.", "success");
   } catch (err) {
     console.error(err);
@@ -688,25 +736,44 @@ async function limpiarTodo(limpiarArchivo = true, limpiarMensaje = true) {
   state.logoFormat = "PNG";
 
   el.cursoSelect.value = "";
+
   setOptions(el.carreraSelect, []);
   setOptions(el.seccionSelect, []);
   setOptions(el.alumnosSelect, []);
+
   el.modoManualCheck.checked = false;
   el.alumnosManualInput.value = "";
   el.alumnosSelectWrapper.classList.remove("hidden");
   el.alumnosManualWrapper.classList.add("hidden");
   el.indicadorInput.value = "";
   el.fechaInput.value = getFechaActualFormateada();
-  state.filteredData = [];
   el.aulaInput.value = "";
+  el.inhabilitadosCheck.checked = false;
+  el.inhabilitadosInput.value = "";
+  el.inhabilitadosWrapper.classList.add("hidden");
+  el.watermarkType.value = "";
 
-  setSingleSelectOptions(el.modalidadInput, MODALIDAD_OPTIONS, "");
-  setSingleSelectOptions(el.periodoInput, PERIODO_OPTIONS, DEFAULT_PERIODO);
+  state.filteredData = [];
+  state.inhabilitadosData = [];
+
+  setSingleSelectOptions(
+    el.modalidadInput,
+    MODALIDAD_OPTIONS,
+    ""
+  );
+
+  setSingleSelectOptions(
+    el.periodoInput,
+    PERIODO_OPTIONS,
+    DEFAULT_PERIODO
+  );
 
   renderPreview([]);
+
   if (limpiarMensaje) {
     clearMessage();
   }
+
   updateUIState();
 }
 
@@ -783,6 +850,8 @@ function initEvents() {
   el.rotuladoBtn.addEventListener("click", generarRotuladoPDF);
   el.limpiarBtn.addEventListener("click", () => limpiarTodo(true));
   el.usarLogoCheck.addEventListener("change", toggleLogo);
+  el.inhabilitadosCheck.addEventListener("change", toggleInhabilitados);
+  el.inhabilitadosInput.addEventListener("input", applyFilters);
 }
 
 async function init() {

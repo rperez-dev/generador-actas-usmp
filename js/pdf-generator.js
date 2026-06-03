@@ -42,42 +42,48 @@ window.PDFGenerator = (() => {
   }
 
   function drawWatermark(doc, text = "BORRADOR") {
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
 
-    doc.saveGraphicsState();
+  doc.saveGraphicsState();
 
-    if (doc.setGState) {
-      doc.setGState(new doc.GState({ opacity: 0.15 }));
-    }
+  if (doc.setGState) {
+    doc.setGState(new doc.GState({ opacity: 0.12 }));
+  }
 
-    doc.setFont("helvetica", "bold");
+  doc.setFont("helvetica", "bold");
+
+  if (text === "INHABILITADOS") {
+    doc.setFontSize(70);
+    doc.setTextColor(180, 0, 0);
+  } else {
     doc.setFontSize(90);
     doc.setTextColor(80, 80, 80);
-
-    const angle = 30;
-
-    const centerX = pageWidth / 2;
-    const centerY = pageHeight / 2;
-
-    const textWidth = doc.getTextWidth(text);
-    const textHeight = doc.getTextDimensions(text).h;
-
-    const rad = (angle * Math.PI) / 140;
-
-    const offsetX = (textHeight / 2) * Math.sin(rad);
-    const offsetY = (textWidth / 2) * Math.sin(rad);
-
-    const moveRight = 25;
-
-    doc.text(text, centerX - offsetX + moveRight, centerY + offsetY, {
-      align: "center",
-      angle: angle,
-      baseline: "middle",
-    });
-
-    doc.restoreGraphicsState();
   }
+
+  const angle = 30;
+
+  const centerX = pageWidth / 2;
+  const centerY = pageHeight / 2;
+
+  const textWidth = doc.getTextWidth(text);
+  const textHeight = doc.getTextDimensions(text).h;
+
+  const rad = (angle * Math.PI) / 180;
+
+  const offsetX = (textHeight / 2) * Math.sin(rad);
+  const offsetY = (textWidth / 2) * Math.sin(rad);
+
+  const moveRight = 25;
+
+  doc.text(text, centerX - offsetX + moveRight, centerY + offsetY, {
+    align: "center",
+    angle,
+    baseline: "middle",
+  });
+
+  doc.restoreGraphicsState();
+}
 
   function drawLogo(doc, logoBase64, logoFormat) {
     if (!logoBase64) return;
@@ -547,7 +553,8 @@ window.PDFGenerator = (() => {
     const pageHeight = doc.internal.pageSize.getHeight();
     const footerHeight = 36;
     const bottomMargin = 20;
-    const nombreArchivo = `ACTA_${config.curso}_${config.fecha}.pdf`;
+    const nombreArchivo =
+      config.nombreArchivo || `ACTA_${config.curso}_${config.fecha}.pdf`;
 
     if (finalY + footerHeight > pageHeight - bottomMargin) {
       doc.addPage();
